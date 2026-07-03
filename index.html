@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mairie de Morzine - Registre des Arrêtés</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 1350px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header h1 { margin: 0 0 5px 0; font-size: 24px; }
+        .header p { margin: 0; font-size: 14px; opacity: 0.9; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; }
+        .search-container { flex: 1; min-width: 300px; }
+        .search-bar { width: 100%; padding: 12px 15px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        .folder-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 16px; background-color: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+        .tab-btn.active { background-color: #1f4e78; color: white; border-color: #1f4e78; }
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #d9d9d9; }
+        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
+        th { background-color: #f1f4f8; color: #1f4e78; padding: 14px; font-weight: 600; border-bottom: 2px solid #cbd5e1; font-size: 13px; text-transform: uppercase; }
+        td { padding: 14px; border-bottom: 1px solid #e2e8f0; color: #444; font-size: 14px; vertical-align: top; word-wrap: break-word; }
+        tr:hover { background-color: #f8fafc; }
+        .badge-num { background-color: #e0f2fe; color: #0369a1; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 13px; border: 1px solid #bae6fd; }
+        .badge-cat { background-color: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; }
+        .note-box { width: 100%; height: 50px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 12px; resize: vertical; box-sizing: border-box; outline: none; }
+        .btn-pdf { display: inline-block; padding: 7px 14px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: bold; }
+        .loading { padding: 20px; text-align: center; font-weight: bold; color: #1f4e78; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 Registre National des Arrêtés Municipaux</h1>
+            <p>Commune de Morzine Avoriaz — Synchronisation Cloud Supabase & GitHub</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Rechercher en temps réel (numéro, rue, mot-clé)...">
+            </div>
+            <div class="folder-tabs">
+                <button class="tab-btn active" onclick="filtrerDossier('Tous', event)">📁 Tous</button>
+                <button class="tab-btn" onclick="filtrerDossier('Circulation', event)">🚗 Circulation</button>
+                <button class="tab-btn" onclick="filtrerDossier('Travaux', event)">🚧 Travaux</button>
+                <button class="tab-btn" onclick="filtrerDossier('Événements', event)">🎉 Événements</button>
+                <button class="tab-btn" onclick="filtrerDossier('Autres', event)">📄 Autres</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="loadingMessage" class="loading">🔄 Chargement des arrêtés depuis la base sécurisée...</div>
+            <table id="mainTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">N° Acte</th>
+                        <th style="width: 15%;">Dossier</th>
+                        <th style="width: 45%;">Sujet / Objet de l'arrêté</th>
+                        <th style="width: 18%;">Mes Annotations</th>
+                        <th style="width: 10%;">Fichier</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION DU CLIENT SUPABASE (Mettre votre URL et votre clé publique 'anon')
+        const SUPABASE_URL = "https://VOTRE_PROJECT_ID.supabase.co";
+        const SUPABASE_ANON_KEY = "VOTRE_ANON_PUBLIC_KEY"; // Ici, la clé anon publique est sécurisée
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let dossierActuel = 'Tous';
+        let tousLesArretes = [];
+
+        // Récupération des données en temps réel depuis Supabase SQL
+        async function chargerDonnees() {
+            const { data, error } = await _supabase
+                .from('arretes')
+                .select('*')
+                .order('numero', { ascending: false });
+
+            if (error) {
+                document.getElementById('loadingMessage').innerText = "❌ Erreur de liaison cloud : " + error.message;
+                return;
+            }
+
+            tousLesArretes = data;
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('mainTable').style.display = 'table';
+            afficherTableau();
+        }
+
+        function afficherTableau() {
+            const tbody = document.getElementById('tableBody');
+            const searchTxt = document.getElementById('searchInput').value.toLowerCase();
+            const icones = {"Travaux": "🚧", "Circulation": "🚗", "Événements": "🎉", "Autres": "📄"};
+            
+            tbody.innerHTML = "";
+
+            tousLesArretes.forEach(item => {
+                const correspondDossier = (dossierActuel === 'Tous' || item.categorie === dossierActuel);
+                const correspondRecherche = item.titre.toLowerCase().includes(searchTxt) || item.numero.toLowerCase().includes(searchTxt);
+
+                if (correspondDossier && correspondRecherche) {
+                    const ico = icones[item.categorie] || "📄";
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="badge-num">${item.numero}</span></td>
+                        <td><span class="badge-cat">${ico} ${item.categorie}</span></td>
+                        <td><strong>${item.titre}</strong></td>
+                        <td>
+                            <textarea class="note-box" data-id="${item.numero}" placeholder="Note de bureau..."></textarea>
+                        </td>
+                        <td><a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a></td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            // Réactivation des écoutes sur le localStorage pour les annotations
+            document.querySelectorAll('.note-box').forEach(textarea => {
+                const id = textarea.getAttribute('data-id');
+                textarea.value = localStorage.getItem('note_mairie_' + id) || '';
+                textarea.addEventListener('input', (e) => {
+                    localStorage.setItem('note_mairie_' + id, e.target.value);
+                });
+            });
+        }
+
+        function filtrerDossier(nomDossier, event) {
+            dossierActuel = nomDossier;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            afficherTableau();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', afficherTableau);
+        
+        // Lancement au chargement de la page
+        chargerDonnees();
+    </script>
+</body>
+</html>
