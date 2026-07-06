@@ -7,15 +7,19 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 1450px; margin: 0 auto; }
+        .container { max-width: 1550px; margin: 0 auto; }
         .header { background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
         .header h1 { margin: 0 0 5px 0; font-size: 24px; display: inline-block; }
         .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         
-        /* Boutons Admin Header */
         .admin-header-btn { position: absolute; top: 25px; right: 25px; padding: 10px 16px; background-color: #e2e8f0; color: #1e293b; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; }
         .admin-header-btn.active { background-color: #ef4444; color: white; }
         .edit-title-btn { background: none; border: none; color: #bae6fd; cursor: pointer; font-size: 14px; margin-left: 10px; text-decoration: underline; }
+
+        /* Panel configuration mail */
+        .admin-panel { background: #f8fafc; border: 2px dashed #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: none; }
+        .admin-panel label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; color: #1e293b; }
+        .admin-panel input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
 
         .toolbar { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; }
         .toolbar-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
@@ -24,11 +28,14 @@
         .search-bar { width: 100%; padding: 12px 15px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
         
         .folder-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .tab-btn { padding: 8px 14px; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
-        .tab-btn.active { background-color: #1f4e78; color: white; border-color: #1f4e78; }
-        .btn-add-folder { background-color: #10b981; color: white; border-color: #10b981; }
+        .tab-btn-wrapper { display: inline-flex; align-items: center; background: white; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
+        .tab-btn { padding: 8px 14px; background: none; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; color: #333; }
+        .tab-btn-wrapper.active { background-color: #1f4e78; border-color: #1f4e78; }
+        .tab-btn-wrapper.active .tab-btn { color: white; }
+        .del-folder-btn { background: #fee2e2; color: #ef4444; border: none; padding: 8px 10px; cursor: pointer; font-weight: bold; border-left: 1px solid #fca5a5; font-size: 12px; }
+        .del-folder-btn:hover { background: #fca5a5; }
+        .btn-add-folder { padding: 8px 14px; background-color: #10b981; color: white; border: 1px solid #10b981; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         
-        /* Filtres Lieux */
         .lieux-filters { display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 6px; border: 1px solid #cbd5e1; }
         .lieu-btn { padding: 6px 12px; border: none; background: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; color: #475569; }
         .lieu-btn.active { background: white; color: #1f4e78; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -43,14 +50,14 @@
         .badge-cat { background-color: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; display: inline-block; }
         .badge-lieu { background-color: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #fde68a; display: inline-block; }
         
-        /* Inputs d'édition Admin */
         .admin-input { width: 100%; padding: 6px 8px; border: 1px solid #3b82f6; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
         .admin-select { width: 100%; padding: 6px 8px; border: 1px solid #3b82f6; border-radius: 4px; background: white; font-size: 13px; }
         .btn-save-row { background-color: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-save-row:hover { background-color: #2563eb; }
-
+        
         .note-box { width: 100%; height: 50px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 12px; resize: vertical; box-sizing: border-box; outline: none; }
-        .btn-pdf { display: inline-block; padding: 7px 14px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: bold; text-align: center; }
+        .btn-group-actions { display: flex; flex-direction: column; gap: 4px; }
+        .btn-pdf { display: block; padding: 6px 10px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; }
+        .btn-email { display: block; padding: 6px 10px; background-color: #f59e0b; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; cursor: pointer; }
         .loading { padding: 20px; text-align: center; font-weight: bold; color: #1f4e78; }
     </style>
 </head>
@@ -58,10 +65,15 @@
     <div class="container">
         <div class="header">
             <h1 id="siteTitle">📁 Registre National des Arrêtés Municipaux</h1>
-            <button id="editTitleBtn" class="edit-title-btn" style="display:none;" onclick="modifierTitreSite()">✏️ Modifier le titre</button>
+            <button id="editTitleBtn" class="edit-title-btn" style="display:none;" onclick="modifierTitreSite()">✏️ Nom de Mairie</button>
             <p>Commune de Morzine Avoriaz — Synchronisation Cloud Supabase & GitHub</p>
-            
             <button id="adminToggleBtn" class="admin-header-btn" onclick="toggleAdminMode()">🔧 Connexion Admin</button>
+        </div>
+
+        <!-- Panneau configuration Liste de diffusion -->
+        <div class="admin-panel" id="adminPanel">
+            <label>📧 Liste de diffusion e-mail (séparez les adresses par des virgules) :</label>
+            <input type="text" id="mailingListInput" placeholder="exemple@morzine.fr, secretariat@morzine.fr, elus@morzine.fr" oninput="sauvegarderMailingList()">
         </div>
 
         <div class="toolbar">
@@ -69,17 +81,14 @@
                 <div class="search-container">
                     <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Rechercher en temps réel (numéro, rue, mot-clé)...">
                 </div>
-                
                 <div class="lieux-filters">
                     <button class="lieu-btn active" onclick="filtrerLieu('Tous', event)">📍 Tous</button>
                     <button class="lieu-btn" onclick="filtrerLieu('Morzine', event)">Morzine</button>
                     <button class="lieu-btn" onclick="filtrerLieu('Avoriaz', event)">Avoriaz</button>
                 </div>
             </div>
-
             <div class="toolbar-row">
-                <div class="folder-tabs" id="folderTabsContainer">
-                    </div>
+                <div class="folder-tabs" id="folderTabsContainer"></div>
             </div>
         </div>
 
@@ -90,10 +99,10 @@
                     <tr>
                         <th style="width: 10%;">N° Acte</th>
                         <th style="width: 10%;">Lieu</th>
-                        <th style="width: 13%;">Dossier</th>
-                        <th style="width: 40%;">Sujet / Objet de l'arrêté</th>
+                        <th style="width: 12%;">Dossier</th>
+                        <th style="width: 38%;">Sujet / Objet de l'arrêté</th>
                         <th style="width: 15%;">Mes Annotations</th>
-                        <th style="width: 12%;">Action / Fichier</th>
+                        <th style="width: 15%;">Action / Partage</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -104,7 +113,6 @@
     <script>
         const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";
-        
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let dossierActuel = 'Tous';
@@ -112,36 +120,28 @@
         let tousLesArretes = [];
         let isAdmin = false;
 
-        // Liste des dossiers configurables (sauvegardée localement pour l'exemple ou dynamique)
         let categoriesBase = ['Circulation', 'Travaux', 'Événements', 'Autres'];
         let customCategories = JSON.parse(localStorage.getItem('mairie_custom_folders') || "[]");
         let listeDossiers = [...new Set([...categoriesBase, ...customCategories])];
 
-        // Charger le titre personnalisé du site
         document.getElementById('siteTitle').innerText = localStorage.getItem('mairie_site_title') || "📁 Registre National des Arrêtés Municipaux";
+        document.getElementById('mailingListInput').value = localStorage.getItem('mairie_mailing_list') || "";
 
         async function chargerDonnees() {
-            const { data, error } = await _supabase
-                .from('arretes')
-                .select('*')
-                .order('numero', { ascending: false });
-
+            const { data, error } = await _supabase.from('arretes').select('*').order('numero', { ascending: false });
             if (error) {
-                document.getElementById('loadingMessage').innerText = "❌ Erreur de liaison cloud : " + error.message;
+                document.getElementById('loadingMessage').innerText = "❌ Erreur de liaison : " + error.message;
                 return;
             }
-
             tousLesArretes = data;
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('mainTable').style.display = 'table';
             
-            // Si des arrêtés contiennent de nouvelles catégories non listées, on les ajoute automatiquement
             tousLesArretes.forEach(item => {
                 if (item.categorie && !listeDossiers.includes(item.categorie)) {
                     listeDossiers.push(item.categorie);
                 }
             });
-
             genererOngletsDossiers();
             afficherTableau();
         }
@@ -150,15 +150,28 @@
             const container = document.getElementById('folderTabsContainer');
             const icones = {"Travaux": "🚧", "Circulation": "🚗", "Événements": "🎉", "Autres": "📄"};
             
-            container.innerHTML = `<button class="tab-btn ${dossierActuel === 'Tous' ? 'active' : ''}" onclick="filtrerDossier('Tous', event)">📁 Tous</button>`;
+            container.innerHTML = `
+                <div class="tab-btn-wrapper ${dossierActuel === 'Tous' ? 'active' : ''}">
+                    <button class="tab-btn" onclick="filtrerDossier('Tous', event)">📁 Tous</button>
+                </div>`;
             
             listeDossiers.forEach(dossier => {
                 const ico = icones[dossier] || "📁";
-                container.innerHTML += `<button class="tab-btn ${dossierActuel === dossier ? 'active' : ''}" onclick="filtrerDossier('${dossier}', event)">${ico} ${dossier}</button>`;
+                const estPersonnalise = customCategories.includes(dossier);
+                
+                let boutonSupprimer = (isAdmin && estPersonnalise) 
+                    ? `<button class="del-folder-btn" onclick="supprimerDossier('${dossier}', event)">✕</button>` 
+                    : '';
+
+                container.innerHTML += `
+                    <div class="tab-btn-wrapper ${dossierActuel === dossier ? 'active' : ''}">
+                        <button class="tab-btn" onclick="filtrerDossier('${dossier}', event)">${ico} ${dossier}</button>
+                        ${boutonSupprimer}
+                    </div>`;
             });
 
             if (isAdmin) {
-                container.innerHTML += `<button class="tab-btn btn-add-folder" onclick="ajouterNouveauDossier()">➕ Ajouter un dossier</button>`;
+                container.innerHTML += `<button class="btn-add-folder" onclick="ajouterNouveauDossier()">➕ Créer un dossier</button>`;
             }
         }
 
@@ -170,9 +183,7 @@
             tbody.innerHTML = "";
 
             tousLesArretes.forEach(item => {
-                // Gestion de la valeur par défaut pour le Lieu si vide ou inexistant
                 const lieuItem = item.lieu || "Morzine";
-
                 const correspondDossier = (dossierActuel === 'Tous' || item.categorie === dossierActuel);
                 const correspondLieu = (lieuActuel === 'Tous' || lieuItem === lieuActuel);
                 const correspondRecherche = item.titre.toLowerCase().includes(searchTxt) || item.numero.toLowerCase().includes(searchTxt);
@@ -182,9 +193,7 @@
                     const tr = document.createElement('tr');
 
                     if (isAdmin) {
-                        // Affichage Ligne Mode ADMIN (Modifiable)
                         let optionsDossier = listeDossiers.map(d => `<option value="${d}" ${item.categorie === d ? 'selected' : ''}>${d}</option>`).join('');
-                        
                         tr.innerHTML = `
                             <td><input type="text" class="admin-input" id="edit-num-${item.numero}" value="${item.numero}"></td>
                             <td>
@@ -193,152 +202,116 @@
                                     <option value="Avoriaz" ${lieuItem === 'Avoriaz' ? 'selected' : ''}>Avoriaz</option>
                                 </select>
                             </td>
-                            <td>
-                                <select class="admin-select" id="edit-cat-${item.numero}">
-                                    ${optionsDossier}
-                                </select>
-                            </td>
+                            <td><select class="admin-select" id="edit-cat-${item.numero}">${optionsDossier}</select></td>
                             <td><textarea class="admin-input" style="height:50px; resize:vertical;" id="edit-titre-${item.numero}">${item.titre}</textarea></td>
+                            <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
                             <td>
-                                <textarea class="note-box" data-id="${item.numero}" placeholder="Note de bureau..."></textarea>
-                            </td>
-                            <td>
-                                <button class="btn-save-row" onclick="sauvegarderLigne('${item.numero}')">💾 Sauver</button>
-                                <a href="${item.lien}" target="_blank" class="btn-pdf" style="margin-top:5px; padding: 4px 8px; font-size:11px;">📄 Voir</a>
-                            </td>
-                        `;
+                                <div class="btn-group-actions">
+                                    <button class="btn-save-row" onclick="sauvegarderLigne('${item.numero}')">💾 Sauver</button>
+                                    <button class="btn-email" onclick="transmettreParMail('${item.numero}', \`${item.titre.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`, '${item.lien}')">📧 Transmettre</button>
+                                    <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
+                                </div>
+                            </td>`;
                     } else {
-                        // Affichage Ligne Mode PUBLIC (Lecture seule)
                         tr.innerHTML = `
                             <td><span class="badge-num">${item.numero}</span></td>
                             <td><span class="badge-lieu">📍 ${lieuItem}</span></td>
                             <td><span class="badge-cat">${ico} ${item.categorie}</span></td>
                             <td><strong>${item.titre}</strong></td>
+                            <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
                             <td>
-                                <textarea class="note-box" data-id="${item.numero}" placeholder="Note de bureau..."></textarea>
-                            </td>
-                            <td><a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a></td>
-                        `;
+                                <div class="btn-group-actions">
+                                    <button class="btn-email" onclick="transmettreParMail('${item.numero}', \`${item.titre.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`, '${item.lien}')">📧 Mail</button>
+                                    <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
+                                </div>
+                            </td>`;
                     }
                     tbody.appendChild(tr);
                 }
             });
 
-            // Reconnexion du localStorage pour les notes écrites
             document.querySelectorAll('.note-box').forEach(textarea => {
                 const id = textarea.getAttribute('data-id');
                 textarea.value = localStorage.getItem('note_mairie_' + id) || '';
-                textarea.addEventListener('input', (e) => {
-                    localStorage.setItem('note_mairie_' + id, e.target.value);
-                });
+                textarea.addEventListener('input', (e) => { localStorage.setItem('note_mairie_' + id, e.target.value); });
             });
         }
 
-        // =====================================================================
-        // FONCTIONS ADMINISTRATEUR (SAUVEGARDE ET ACTIONS)
-        // =====================================================================
-        
         function toggleAdminMode() {
             if (!isAdmin) {
-                const pass = prompt("Entrez le mot de passe Administrateur :");
-                if (pass === "admin") {
+                if (prompt("Mot de passe :") === "admin") {
                     isAdmin = true;
                     document.getElementById('adminToggleBtn').innerText = "🔒 Quitter Admin";
                     document.getElementById('adminToggleBtn').classList.add('active');
                     document.getElementById('editTitleBtn').style.display = "inline-block";
-                } else {
-                    alert("Mot de passe incorrect.");
+                    document.getElementById('adminPanel').style.display = "block";
                 }
             } else {
                 isAdmin = false;
                 document.getElementById('adminToggleBtn').innerText = "🔧 Connexion Admin";
                 document.getElementById('adminToggleBtn').classList.remove('active');
                 document.getElementById('editTitleBtn').style.display = "none";
+                document.getElementById('adminPanel').style.display = "none";
             }
             genererOngletsDossiers();
             afficherTableau();
         }
 
-        function modifierTitreSite() {
-            const nouveauTitre = prompt("Entrez le nouveau titre pour la mairie :", document.getElementById('siteTitle').innerText);
-            if (nouveauTitre) {
-                document.getElementById('siteTitle').innerText = nouveauTitre;
-                localStorage.setItem('mairie_site_title', nouveauTitre);
-            }
+        function sauvegarderMailingList() {
+            localStorage.setItem('mairie_mailing_list', document.getElementById('mailingListInput').value);
+        }
+
+        function transmettreParMail(numero, titre, lien) {
+            const listeDiffusion = localStorage.getItem('mairie_mailing_list') || "";
+            const sujet = encodeURIComponent(`[Mairie Morzine-Avoriaz] Nouvel Arrêté Municipal N° ${numero}`);
+            const corps = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint le lien vers le nouvel arrêté municipal publié :\n\n🔹 N° d'acte : ${numero}\n🔹 Objet : ${titre}\n\n👉 Consulter le document officiel en ligne : ${lien}\n\nCordialement,\nServices Administratifs.`);
+            
+            window.location.href = `mailto:${listeDiffusion}?subject=${sujet}&body=${corps}`;
         }
 
         function ajouterNouveauDossier() {
-            const nomDossier = prompt("Nom du nouveau dossier / catégorie :");
-            if (nomDossier && nomDossier.trim() !== "") {
-                const epure = nomDossier.trim();
-                if (!listeDossiers.includes(epure)) {
-                    customCategories.push(epure);
-                    localStorage.setItem('mairie_custom_folders', JSON.stringify(customCategories));
-                    listeDossiers.push(epure);
-                    genererOngletsDossiers();
-                    afficherTableau();
-                }
+            const nom = prompt("Nom du dossier :");
+            if (nom && nom.trim() !== "") {
+                customCategories.push(nom.trim());
+                localStorage.setItem('mairie_custom_folders', JSON.stringify(customCategories));
+                listeDossiers.push(nom.trim());
+                genererOngletsDossiers();
+                afficherTableau();
+            }
+        }
+
+        function supprimerDossier(nomDossier, event) {
+            event.stopPropagation();
+            if (confirm(`Voulez-vous supprimer le dossier "${nomDossier}" de l'affichage ? (Les arrêtés ne seront pas supprimés)`)) {
+                customCategories = customCategories.filter(c => c !== nomDossier);
+                localStorage.setItem('mairie_custom_folders', JSON.stringify(customCategories));
+                listeDossiers = listeDossiers.filter(d => d !== nomDossier);
+                if (dossierActuel === nomDossier) dossierActuel = 'Tous';
+                genererOngletsDossiers();
+                afficherTableau();
             }
         }
 
         async function sauvegarderLigne(ancienNumero) {
-            const nouveauNumero = document.getElementById(`edit-num-${ancienNumero}`).value.trim();
-            const nouveauLieu = document.getElementById(`edit-lieu-${ancienNumero}`).value;
-            const nouvelleCategorie = document.getElementById(`edit-cat-${ancienNumero}`).value;
-            const nouveauTitre = document.getElementById(`edit-titre-${ancienNumero}`).value.trim();
+            const nNum = document.getElementById(`edit-num-${ancienNumero}`).value.trim();
+            const nLieu = document.getElementById(`edit-lieu-${ancienNumero}`).value;
+            const nCat = document.getElementById(`edit-cat-${ancienNumero}`).value;
+            const nTit = document.getElementById(`edit-titre-${ancienNumero}`).value.trim();
 
-            if (!nouveauNumero || !nouveauTitre) {
-                alert("Le numéro et le titre ne peuvent pas être vides.");
-                return;
-            }
-
-            // Envoi de la mise à jour à Supabase
-            const { error } = await _supabase
-                .from('arretes')
-                .update({
-                    numero: nouveauNumero,
-                    lieu: nouveauLieu,
-                    categorie: nouvelleCategorie,
-                    titre: nouveauTitre
-                })
-                .eq('numero', ancienNumero);
-
-            if (error) {
-                alert("❌ Erreur lors de la sauvegarde sur le Cloud : " + error.message);
-            } else {
-                alert("✅ Arrêté mis à jour avec succès dans le Cloud !");
-                // Mettre à jour les notes locales si le numéro a changé
-                if (ancienNumero !== nouveauNumero) {
-                    const ancienneNote = localStorage.getItem('note_mairie_' + ancienNumero);
-                    if (ancienneNote) {
-                        localStorage.setItem('note_mairie_' + nouveauNumero, ancienneNote);
-                        localStorage.removeItem('note_mairie_' + ancienNumero);
-                    }
-                }
-                chargerDonnees(); // Recharge l'affichage propre
-            }
+            const { error } = await _supabase.from('arretes').update({ numero: nNum, lieu: nLieu, categorie: nCat, titre: nTit }).eq('numero', ancienNumero);
+            if (error) alert("Erreur Cloud : " + error.message);
+            else { alert("✅ Enregistré !"); chargerDonnees(); }
         }
 
-        // =====================================================================
-        // FILTRES ET ÉCOUTEURS
-        // =====================================================================
-        function filtrerDossier(nomDossier, event) {
-            dossierActuel = nomDossier;
-            event.target.parentNode.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            afficherTableau();
+        function modifierTitreSite() {
+            const t = prompt("Nouveau titre :", document.getElementById('siteTitle').innerText);
+            if (t) { document.getElementById('siteTitle').innerText = t; localStorage.setItem('mairie_site_title', t); }
         }
 
-        function filtrerLieu(nomLieu, event) {
-            lieuActuel = nomLieu;
-            event.target.parentNode.querySelectorAll('.lieu-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            afficherTableau();
-        }
-
+        function filtrerDossier(n, e) { dossierActuel = n; document.querySelectorAll('.tab-btn-wrapper').forEach(b => b.classList.remove('active')); e.target.parentNode.classList.add('active'); afficherTableau(); }
+        function filtrerLieu(n, e) { lieuActuel = n; document.querySelectorAll('.lieu-btn').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); afficherTableau(); }
         document.getElementById('searchInput').addEventListener('input', afficherTableau);
         
-        // Lancement au chargement de la page
         chargerDonnees();
     </script>
 </body>
