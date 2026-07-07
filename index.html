@@ -26,6 +26,8 @@
         .btn-danger:hover { background-color: #bd2130; }
         .btn-secondary { background-color: #6c757d; color: white; }
         .btn-secondary:hover { background-color: #5a6268; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-success:hover { background-color: #218838; }
         
         /* Barre d'outils */
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -50,6 +52,10 @@
         .badge-num { background-color: #edf2f7; color: #2d3748; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
         .badge-cat { background-color: #ebf8ff; color: #2b6cb0; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         
+        /* Input d'édition en direct */
+        .edit-input { width: 100%; padding: 6px 10px; border: 1px solid #a0aec0; border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
+        .edit-input:focus { border-color: #2f5597; outline: none; background-color: #fff; }
+
         /* Boutons d'action */
         .action-cell { display: flex; gap: 6px; }
         .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: background 0.2s; }
@@ -87,7 +93,7 @@
             <h3>🛠️ Zone d'Administration du Secrétariat</h3>
             <p style="margin: 0 0 10px 0; font-size: 13px;">Options de maintenance rapide des actes et des métadonnées locales :</p>
             <div class="admin-actions">
-                <button class="btn-admin-action btn-secondary" onclick="toggleAdminColumns()">👁️ Afficher/Masquer Colonne de Suppression</button>
+                <button class="btn-admin-action btn-secondary" id="btnToggleEdition" onclick="toggleAdminColumns()">✏️ Activer le Mode Édition / Modification globale</button>
                 <button class="btn-admin-action btn-danger" onclick="viderToutesLesNotes()">🗑️ Effacer toutes les notes de bureau (Local)</button>
                 <button class="btn-admin-action btn-secondary" onclick="chargerDonnees()">🔄 Forcer la synchronisation Supabase</button>
             </div>
@@ -126,11 +132,11 @@
             <thead>
                 <tr>
                     <th style="width: 120px;">Numéro d'Acte</th>
-                    <th style="width: 150px;">Catégorie</th>
-                    <th>Nom & Objet de l'arrêté</th>
-                    <th style="width: 280px;">Notes de bureau</th>
-                    <th style="width: 180px;">Actions</th>
-                    <th class="admin-col" style="width: 100px; background-color: #e53e3e;">Modération</th>
+                    <th style="width: 180px;">Catégorie</th>
+                    <th>Nom & Objet de l'arrêté (et tags [Lieu]/[Saison])</th>
+                    <th style="width: 240px;">Notes de bureau</th>
+                    <th style="width: 160px;">Actions</th>
+                    <th class="admin-col" style="width: 160px; background-color: #2f5597; color: white;">Gestion BDD</th>
                 </tr>
             </thead>
             <tbody id="listeArretes">
@@ -143,12 +149,12 @@
 
     <script>
         // Configuration de vos accès Supabase fonctionnels
-        const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";[cite: 1]
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";[cite: 1]
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);[cite: 1]
 
         // CONFIGURATION SECURITE
-        const CODE_ADMIN = "1234"; // <-- MODIFIEZ VOTRE CODE ICI
+        const CODE_ADMIN = "1234"; 
         let isAdminAuthentifie = false;
 
         let tousLesArretes = [];
@@ -175,8 +181,16 @@
         function verifierEtAjouterOngletsDynamiques() {
             const categoriesParDefaut = ['Tout', 'Permanent', 'Travaux', 'Circulation', 'Événements', 'Autres'];
             const container = document.getElementById('categoriesTabs');
-            const categoriesExistantes = [...new Set(tousLesArretes.map(item => item.categorie))];
             
+            // Nettoyage des onglets dynamiques précédents pour éviter les doublons au rechargement
+            const boutons = container.querySelectorAll('.tab-btn');
+            boutons.forEach(b => {
+                if(!categoriesParDefaut.includes(b.innerText.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]|📁|📜|👷|🚗|🎉|🗂️/g, '').trim())) {
+                    b.remove();
+                }
+            });
+
+            const categoriesExistantes = [...new Set(tousLesArretes.map(item => item.categorie))];
             categoriesExistantes.forEach(cat => {
                 if (cat && !categoriesParDefaut.includes(cat)) {
                     const btn = document.createElement('button');
@@ -193,6 +207,11 @@
             const tbody = document.getElementById('listeArretes');
             const saisie = document.getElementById('searchInput').value.toLowerCase().trim();
             tbody.innerHTML = '';
+
+            // Gestion de l'affichage du header admin en haut
+            document.querySelectorAll('th.admin-col').forEach(el => {
+                el.style.display = colonnesAdminVisibles ? 'table-cell' : 'none';
+            });
 
             if (tousLesArretes.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="loading">Aucun arrêté trouvé.</td></tr>';
@@ -217,15 +236,23 @@
                     if (item.categorie === "Circulation") ico = "🚗";
                     if (item.categorie === "Événements") ico = "🎉";
 
-                    // Préparation de l'email automatique
                     const sujetEmail = encodeURIComponent(`Arrêté Municipal N° ${item.numero} - Mairie de Morzine-Avoriaz`);
                     const corpsEmail = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint les informations concernant l'arrêté municipal référencé sur l'intranet :\n\n📌 Acte N° : ${item.numero}\n📄 Objet : ${item.titre}\n🔗 Lien de téléchargement direct du document PDF : ${item.lien}\n\nCordialement,\nLe Secrétariat Général`);
+
+                    // Rendu adaptatif selon si le mode édition est actif ou non
+                    const renduCategorie = colonnesAdminVisibles 
+                        ? `<input type="text" id="edit-cat-${item.numero}" class="edit-input" value="${item.categorie || ''}">` 
+                        : `<span class="badge-cat">${ico} ${item.categorie}</span>`;
+
+                    const renduTitre = colonnesAdminVisibles
+                        ? `<input type="text" id="edit-titre-${item.numero}" class="edit-input" style="font-weight:bold;" value="${item.titre || ''}">`
+                        : `<strong>${item.titre}</strong>`;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><span class="badge-num">${item.numero}</span></td>
-                        <td><span class="badge-cat">${ico} ${item.categorie}</span></td>
-                        <td><strong>${item.titre}</strong></td>
+                        <td>${renduCategorie}</td>
+                        <td>${renduTitre}</td>
                         <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
                         <td>
                             <div class="action-cell">
@@ -234,7 +261,10 @@
                             </div>
                         </td>
                         <td class="admin-col" style="${colonnesAdminVisibles ? 'display: table-cell;' : 'display: none;'}">
-                            <button class="btn-admin-action btn-danger" style="padding: 4px 8px;" onclick="supprimerEntreeBDD('${item.numero}')">Supprimer</button>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <button class="btn-admin-action btn-success" style="padding: 5px 8px;" onclick="sauvegarderModification('${item.numero}')">💾 Sauver</button>
+                                <button class="btn-admin-action btn-danger" style="padding: 5px 8px;" onclick="supprimerEntreeBDD('${item.numero}')">🗑️ Suppr</button>
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -255,20 +285,16 @@
         }
 
         // =====================================================================
-        // BACKOFFICE ADMIN CONTROLS AVEC CODE SECRET
+        // BACKOFFICE ADMIN CONTROLS AVEC MODIFICATION EN DIRECT
         // =====================================================================
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
-            
-            // Si le panneau est déjà visible, on le ferme simplement
             if (panel.style.display === 'block') {
                 panel.style.display = 'none';
                 return;
             }
-            
-            // Si l'utilisateur n'est pas encore identifié pour cette session, on demande le code
             if (!isAdminAuthentifie) {
-                const saisieCode = prompt("🔐 Cet espace est réservé. Veuillez saisir le code d'accès de l'administration :");
+                const saisieCode = prompt("🔐 Cet espace est réservé. Saisissez le code d'accès administration :");
                 if (saisieCode === CODE_ADMIN) {
                     isAdminAuthentifie = true;
                     panel.style.display = 'block';
@@ -282,30 +308,70 @@
 
         function toggleAdminColumns() {
             colonnesAdminVisibles = !colonnesAdminVisibles;
-            document.querySelectorAll('.admin-col').forEach(el => {
-                el.style.display = colonnesAdminVisibles ? 'table-cell' : 'none';
-            });
+            const btn = document.getElementById('btnToggleEdition');
+            if(colonnesAdminVisibles) {
+                btn.innerText = "👁️ Désactiver le Mode Édition (Sécuriser)";
+                btn.style.backgroundColor = "#e2e8f0";
+                btn.style.color = "#1a202c";
+            } else {
+                btn.innerText = "✏️ Activer le Mode Édition / Modification globale";
+                btn.style.backgroundColor = "#6c757d";
+                btn.style.color = "white";
+            }
+            afficherTableau(); // On force le rafraîchissement complet pour basculer en mode input
         }
 
-        function viderToutesLesNotes() {
-            if (confirm("⚠️ Voulez-vous vraiment effacer TOUTES vos annotations secrétariat enregistrées sur ce navigateur ?")) {
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('note_mairie_')) localStorage.removeItem(key);
-                });
-                afficherTableau();
+        async function sauvegarderModification(numeroActe) {
+            const inputTitre = document.getElementById(`edit-titre-${numeroActe}`);
+            const inputCat = document.getElementById(`edit-cat-${numeroActe}`);
+            
+            if(!inputTitre || !inputCat) return;
+
+            const nouveauTitre = inputTitre.value.trim();
+            const nouvelleCategorie = inputCat.value.trim();
+
+            if(!nouveauTitre || !nouvelleCategorie) {
+                alert("⚠️ Le titre et la catégorie ne peuvent pas être vides.");
+                return;
+            }
+
+            try {
+                const { error } = await _supabase
+                    .from('arretes')
+                    .update({ 
+                        titre: nouveauTitre, 
+                        categorie: nouvelleCategorie 
+                    })
+                    .eq('numero', numeroActe);
+
+                if (error) throw error;
+                
+                alert(`✅ L'acte N° ${numeroActe} a été mis à jour avec succès dans le cloud Supabase !`);
+                chargerDonnees(); // Synchronise et actualise l'affichage
+            } catch (err) {
+                alert("❌ Erreur lors de la mise à jour : " + err.message);
             }
         }
 
         async function supprimerEntreeBDD(numeroActe) {
-            if (confirm(`🛑 Voulez-vous supprimer définitivement l'indexation de l'acte N° ${numeroActe} sur Supabase ? (Le fichier physique restera sur votre serveur)`)) {
+            if (confirm(`🛑 Voulez-vous supprimer définitivement l'indexation de l'acte N° ${numeroActe} sur Supabase ?`)) {
                 try {
                     const { error } = await _supabase.from('arretes').delete().eq('numero', numeroActe);
                     if (error) throw error;
-                    alert(`L'acte ${numeroActe} a été retiré de la base cloud.`);
+                    alert(`L'acte ${numeroActe} a été retiré de la base.`);
                     chargerDonnees();
                 } catch (err) {
                     alert("Erreur de suppression : " + err.message);
                 }
+            }
+        }
+
+        function viderToutesLesNotes() {
+            if (confirm("⚠️ Voulez-vous vraiment effacer TOUTES vos annotations de bureau enregistrées localement ?")) {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('note_mairie_')) localStorage.removeItem(key);
+                });
+                afficherTableau();
             }
         }
 
