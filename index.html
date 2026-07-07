@@ -55,7 +55,6 @@
         .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: background 0.2s; }
         .btn-pdf:hover { background-color: #1f4e78; }
         
-        /* Nouveau bouton Mail */
         .btn-mail { display: inline-block; padding: 6px 12px; background-color: #e2e8f0; color: #4a5568; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: all 0.2s; }
         .btn-mail:hover { background-color: #cbd5e1; color: #1a202c; }
         
@@ -74,6 +73,7 @@
 <body>
 
     <div class="container">
+        <!-- HEADER AVEC BOUTON ADMIN -->
         <div class="header-container">
             <div class="header-text">
                 <h1>Mairie de Morzine-Avoriaz</h1>
@@ -82,6 +82,7 @@
             <button class="btn-admin-toggle" onclick="toggleAdminPanel()">⚙️ Options Admin</button>
         </div>
 
+        <!-- PANNEAU DE CONTROLE ADMIN -->
         <div class="admin-panel" id="adminPanel">
             <h3>🛠️ Zone d'Administration du Secrétariat</h3>
             <p style="margin: 0 0 10px 0; font-size: 13px;">Options de maintenance rapide des actes et des métadonnées locales :</p>
@@ -92,6 +93,7 @@
             </div>
         </div>
 
+        <!-- BARRE DE RECHERCHE ET SELECTEUR DE SAISON -->
         <div class="toolbar">
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="🔍 Rechercher par numéro, mot-clé, lieu ([Morzine] / [Avoriaz])...">
@@ -109,6 +111,7 @@
             </div>
         </div>
 
+        <!-- ONGLETS -->
         <div class="tabs" id="categoriesTabs">
             <button class="tab-btn active" onclick="filtrerDossier('Tout', event)">🗂️ Tout afficher</button>
             <button class="tab-btn" onclick="filtrerDossier('Permanent', event)">📜 Permanent</button>
@@ -118,6 +121,7 @@
             <button class="tab-btn" onclick="filtrerDossier('Autres', event)">📁 Autres</button>
         </div>
 
+        <!-- TABLEAU -->
         <table id="tableArretes">
             <thead>
                 <tr>
@@ -138,10 +142,14 @@
     </div>
 
     <script>
-        // Intégration de vos accès récents et fonctionnels 
+        // Configuration de vos accès Supabase fonctionnels
         const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // CONFIGURATION SECURITE
+        const CODE_ADMIN = "1234"; // <-- MODIFIEZ VOTRE CODE ICI
+        let isAdminAuthentifie = false;
 
         let tousLesArretes = [];
         let dossierActuel = 'Tout';
@@ -209,7 +217,7 @@
                     if (item.categorie === "Circulation") ico = "🚗";
                     if (item.categorie === "Événements") ico = "🎉";
 
-                    // Préparation des variables propres pour l'email
+                    // Préparation de l'email automatique
                     const sujetEmail = encodeURIComponent(`Arrêté Municipal N° ${item.numero} - Mairie de Morzine-Avoriaz`);
                     const corpsEmail = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint les informations concernant l'arrêté municipal référencé sur l'intranet :\n\n📌 Acte N° : ${item.numero}\n📄 Objet : ${item.titre}\n🔗 Lien de téléchargement direct du document PDF : ${item.lien}\n\nCordialement,\nLe Secrétariat Général`);
 
@@ -247,11 +255,29 @@
         }
 
         // =====================================================================
-        // BACKOFFICE ADMIN CONTROLS
+        // BACKOFFICE ADMIN CONTROLS AVEC CODE SECRET
         // =====================================================================
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
-            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+            
+            // Si le panneau est déjà visible, on le ferme simplement
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                return;
+            }
+            
+            // Si l'utilisateur n'est pas encore identifié pour cette session, on demande le code
+            if (!isAdminAuthentifie) {
+                const saisieCode = prompt("🔐 Cet espace est réservé. Veuillez saisir le code d'accès de l'administration :");
+                if (saisieCode === CODE_ADMIN) {
+                    isAdminAuthentifie = true;
+                    panel.style.display = 'block';
+                } else if (saisieCode !== null) {
+                    alert("❌ Code incorrect. Accès refusé.");
+                }
+            } else {
+                panel.style.display = 'block';
+            }
         }
 
         function toggleAdminColumns() {
