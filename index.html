@@ -10,9 +10,9 @@
         .container { max-width: 1350px; margin: 0 auto; }
         
         /* Header avec alignement pour le bouton Admin */
-        .header-container { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header-text h1 { margin: 0 0 5px 0; font-size: 24px; }
-        .header-text p { margin: 0; font-size: 14px; opacity: 0.9; }
+        .header { background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0 0 5px 0; font-size: 24px; }
+        .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         
         .btn-admin-toggle { background-color: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.4); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         .btn-admin-toggle:hover { background-color: white; color: #1f4e78; }
@@ -52,23 +52,17 @@
         .badge-num { background-color: #edf2f7; color: #2d3748; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
         .badge-cat { background-color: #ebf8ff; color: #2b6cb0; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         
-        /* Input d'édition en direct */
-        .edit-input { width: 100%; padding: 6px 10px; border: 1px solid #a0aec0; border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: inherit; }
-        .edit-input:focus { border-color: #2f5597; outline: none; background-color: #fff; }
+        /* Formulaire d'édition en direct */
+        .edit-input { width: 100%; padding: 6px 10px; border: 1px solid #a0aec0; border-radius: 4px; font-size: 13px; box-sizing: border-box; font-family: inherit; background-color: #fff; }
+        .edit-input:focus { border-color: #2f5597; outline: none; }
 
-        /* Boutons d'action */
-        .action-cell { display: flex; gap: 6px; }
-        .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: background 0.2s; }
+        .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; }
         .btn-pdf:hover { background-color: #1f4e78; }
-        
-        .btn-mail { display: inline-block; padding: 6px 12px; background-color: #e2e8f0; color: #4a5568; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: all 0.2s; }
-        .btn-mail:hover { background-color: #cbd5e1; color: #1a202c; }
-        
-        /* Colonnes admin masquées par défaut */
-        .admin-col { display: none; }
-        
         .note-box { width: 100%; min-height: 40px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; resize: vertical; box-sizing: border-box; }
         .loading { text-align: center; padding: 40px; font-size: 16px; color: #718096; font-style: italic; }
+
+        /* Masquage de la colonne admin par défaut */
+        .admin-col { display: none; }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
@@ -79,19 +73,17 @@
 <body>
 
     <div class="container">
-        <!-- HEADER AVEC BOUTON ADMIN -->
-        <div class="header-container">
-            <div class="header-text">
+        <div class="header">
+            <div>
                 <h1>Mairie de Morzine-Avoriaz</h1>
                 <p>Registre Intranet des Arrêtés Municipaux — Indexation & Archivage Dynamique</p>
             </div>
             <button class="btn-admin-toggle" onclick="toggleAdminPanel()">⚙️ Options Admin</button>
         </div>
 
-        <!-- PANNEAU DE CONTROLE ADMIN -->
         <div class="admin-panel" id="adminPanel">
             <h3>🛠️ Zone d'Administration du Secrétariat</h3>
-            <p style="margin: 0 0 10px 0; font-size: 13px;">Options de maintenance rapide des actes et des métadonnées locales :</p>
+            <p style="margin: 0 0 10px 0; font-size: 13px;">Options de maintenance rapide des actes et des métadonnées globales :</p>
             <div class="admin-actions">
                 <button class="btn-admin-action btn-secondary" id="btnToggleEdition" onclick="toggleAdminColumns()">✏️ Activer le Mode Édition / Modification globale</button>
                 <button class="btn-admin-action btn-danger" onclick="viderToutesLesNotes()">🗑️ Effacer toutes les notes de bureau (Local)</button>
@@ -99,7 +91,6 @@
             </div>
         </div>
 
-        <!-- BARRE DE RECHERCHE ET SELECTEUR DE SAISON -->
         <div class="toolbar">
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="🔍 Rechercher par numéro, mot-clé, lieu ([Morzine] / [Avoriaz])...">
@@ -117,7 +108,6 @@
             </div>
         </div>
 
-        <!-- ONGLETS -->
         <div class="tabs" id="categoriesTabs">
             <button class="tab-btn active" onclick="filtrerDossier('Tout', event)">🗂️ Tout afficher</button>
             <button class="tab-btn" onclick="filtrerDossier('Permanent', event)">📜 Permanent</button>
@@ -127,16 +117,15 @@
             <button class="tab-btn" onclick="filtrerDossier('Autres', event)">📁 Autres</button>
         </div>
 
-        <!-- TABLEAU -->
         <table id="tableArretes">
             <thead>
                 <tr>
-                    <th style="width: 120px;">Numéro d'Acte</th>
-                    <th style="width: 180px;">Catégorie</th>
-                    <th>Nom & Objet de l'arrêté (et tags [Lieu]/[Saison])</th>
-                    <th style="width: 240px;">Notes de bureau</th>
-                    <th style="width: 160px;">Actions</th>
-                    <th class="admin-col" style="width: 160px; background-color: #2f5597; color: white;">Gestion BDD</th>
+                    <th style="width: 130px;">Numéro d'Acte</th>
+                    <th style="width: 160px;">Catégorie</th>
+                    <th>Nom & Objet de l'arrêté (et Métadonnées)</th>
+                    <th style="width: 260px;">Notes de bureau</th>
+                    <th style="width: 100px;">Action</th>
+                    <th class="admin-col" style="width: 130px; background-color: #2f5597; color: white;">Gestion BDD</th>
                 </tr>
             </thead>
             <tbody id="listeArretes">
@@ -149,10 +138,10 @@
 
     <script>
         // Configuration de vos accès Supabase fonctionnels
-        const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";[cite: 1]
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";[cite: 1]
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);[cite: 1]
-
+        const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         // CONFIGURATION SECURITE
         const CODE_ADMIN = "1234"; 
         let isAdminAuthentifie = false;
@@ -182,7 +171,7 @@
             const categoriesParDefaut = ['Tout', 'Permanent', 'Travaux', 'Circulation', 'Événements', 'Autres'];
             const container = document.getElementById('categoriesTabs');
             
-            // Nettoyage des onglets dynamiques précédents pour éviter les doublons au rechargement
+            // Nettoyage des anciens onglets dynamiques pour éviter les doublons au rechargement
             const boutons = container.querySelectorAll('.tab-btn');
             boutons.forEach(b => {
                 if(!categoriesParDefaut.includes(b.innerText.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]|📁|📜|👷|🚗|🎉|🗂️/g, '').trim())) {
@@ -208,7 +197,7 @@
             const saisie = document.getElementById('searchInput').value.toLowerCase().trim();
             tbody.innerHTML = '';
 
-            // Gestion de l'affichage du header admin en haut
+            // Gestion de la visibilité de la colonne administrative d'entête
             document.querySelectorAll('th.admin-col').forEach(el => {
                 el.style.display = colonnesAdminVisibles ? 'table-cell' : 'none';
             });
@@ -236,32 +225,79 @@
                     if (item.categorie === "Circulation") ico = "🚗";
                     if (item.categorie === "Événements") ico = "🎉";
 
-                    const sujetEmail = encodeURIComponent(`Arrêté Municipal N° ${item.numero} - Mairie de Morzine-Avoriaz`);
-                    const corpsEmail = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint les informations concernant l'arrêté municipal référencé sur l'intranet :\n\n📌 Acte N° : ${item.numero}\n📄 Objet : ${item.titre}\n🔗 Lien de téléchargement direct du document PDF : ${item.lien}\n\nCordialement,\nLe Secrétariat Général`);
+                    // --- ISOLEMENT DES TAGS DANS LE TITRE POUR L'EDITION ---
+                    let cleanTitre = item.titre || '';
+                    let currentLieu = '';
+                    if (cleanTitre.includes('[Morzine]')) {
+                        currentLieu = 'Morzine';
+                        cleanTitre = cleanTitre.replace('[Morzine]', '').trim();
+                    } else if (cleanTitre.includes('[Avoriaz]')) {
+                        currentLieu = 'Avoriaz';
+                        cleanTitre = cleanTitre.replace('[Avoriaz]', '').trim();
+                    }
 
-                    // Rendu adaptatif selon si le mode édition est actif ou non
+                    let currentSaison = '';
+                    ['Permanent', 'Été', 'Hiver', 'Hors saison'].forEach(s => {
+                        if (cleanTitre.includes(`[${s}]`)) {
+                            currentSaison = s;
+                            cleanTitre = cleanTitre.replace(`[${s}]`, '').trim();
+                        }
+                    });
+
+                    // --- GENERATION DU RENDU (CLASSIQUE vs EDITION) ---
+                    const renduNumero = colonnesAdminVisibles
+                        ? `<input type="text" id="edit-numero-${item.numero}" class="edit-input" style="font-family: monospace; font-weight: bold;" value="${item.numero}">`
+                        : `<span class="badge-num">${item.numero}</span>`;
+
                     const renduCategorie = colonnesAdminVisibles 
                         ? `<input type="text" id="edit-cat-${item.numero}" class="edit-input" value="${item.categorie || ''}">` 
                         : `<span class="badge-cat">${ico} ${item.categorie}</span>`;
 
-                    const renduTitre = colonnesAdminVisibles
-                        ? `<input type="text" id="edit-titre-${item.numero}" class="edit-input" style="font-weight:bold;" value="${item.titre || ''}">`
-                        : `<strong>${item.titre}</strong>`;
+                    let renduTitre = `<strong>${item.titre}</strong>`;
+                    if (colonnesAdminVisibles) {
+                        renduTitre = `
+                            <div style="display: flex; flex-direction: column; gap: 6px; background-color: #fff9e6; padding: 10px; border-radius: 6px; border: 1px dashed #ffe0b2;">
+                                <div>
+                                    <label style="font-size:11px; font-weight:bold; color:#555; display:block; margin-bottom:2px;">Objet de l'arrêté :</label>
+                                    <input type="text" id="edit-titre-${item.numero}" class="edit-input" style="font-weight: bold;" value="${cleanTitre}">
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size:11px; font-weight:bold; color:#555; display:block; margin-bottom:2px;">Lieu :</label>
+                                        <select id="edit-lieu-${item.numero}" class="edit-input">
+                                            <option value="">❌ Aucun lieu renseigné</option>
+                                            <option value="Morzine" ${currentLieu === 'Morzine' ? 'selected' : ''}>📍 Morzine</option>
+                                            <option value="Avoriaz" ${currentLieu === 'Avoriaz' ? 'selected' : ''}>🏔️ Avoriaz</option>
+                                        </select>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label style="font-size:11px; font-weight:bold; color:#555; display:block; margin-bottom:2px;">Temporalité / Saison :</label>
+                                        <select id="edit-saison-${item.numero}" class="edit-input">
+                                            <option value="">❌ Aucune saison</option>
+                                            <option value="Permanent" ${currentSaison === 'Permanent' ? 'selected' : ''}>♾️ Permanent</option>
+                                            <option value="Été" ${currentSaison === 'Été' ? 'selected' : ''}>☀️ Été</option>
+                                            <option value="Hiver" ${currentSaison === 'Hiver' ? 'selected' : ''}>❄️ Hiver</option>
+                                            <option value="Hors saison" ${currentSaison === 'Hors saison' ? 'selected' : ''}>🍂 Hors saison</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px; font-weight:bold; color:#555; display:block; margin-bottom:2px;">URL Document PDF (Lien) :</label>
+                                    <input type="text" id="edit-lien-${item.numero}" class="edit-input" value="${item.lien || ''}">
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><span class="badge-num">${item.numero}</span></td>
+                        <td>${renduNumero}</td>
                         <td>${renduCategorie}</td>
                         <td>${renduTitre}</td>
                         <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
-                        <td>
-                            <div class="action-cell">
-                                <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
-                                <a href="mailto:?subject=${sujetEmail}&body=${corpsEmail}" class="btn-mail">📧 Mail</a>
-                            </div>
-                        </td>
+                        <td><a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a></td>
                         <td class="admin-col" style="${colonnesAdminVisibles ? 'display: table-cell;' : 'display: none;'}">
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
                                 <button class="btn-admin-action btn-success" style="padding: 5px 8px;" onclick="sauvegarderModification('${item.numero}')">💾 Sauver</button>
                                 <button class="btn-admin-action btn-danger" style="padding: 5px 8px;" onclick="supprimerEntreeBDD('${item.numero}')">🗑️ Suppr</button>
                             </div>
@@ -285,7 +321,7 @@
         }
 
         // =====================================================================
-        // BACKOFFICE ADMIN CONTROLS AVEC MODIFICATION EN DIRECT
+        // CONTROLES ADMIN & LIVE EDITING FONCTIONNEL
         // =====================================================================
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
@@ -318,36 +354,53 @@
                 btn.style.backgroundColor = "#6c757d";
                 btn.style.color = "white";
             }
-            afficherTableau(); // On force le rafraîchissement complet pour basculer en mode input
+            afficherTableau(); // Force le rafraîchissement complet pour dessiner les formulaires
         }
 
-        async function sauvegarderModification(numeroActe) {
-            const inputTitre = document.getElementById(`edit-titre-${numeroActe}`);
-            const inputCat = document.getElementById(`edit-cat-${numeroActe}`);
+        async function sauvegarderModification(originalNumero) {
+            const inputNumero = document.getElementById(`edit-numero-${originalNumero}`);
+            const inputCat = document.getElementById(`edit-cat-${originalNumero}`);
+            const inputTitre = document.getElementById(`edit-titre-${originalNumero}`);
+            const selectLieu = document.getElementById(`edit-lieu-${originalNumero}`);
+            const selectSaison = document.getElementById(`edit-saison-${originalNumero}`);
+            const inputLien = document.getElementById(`edit-lien-${originalNumero}`);
             
-            if(!inputTitre || !inputCat) return;
+            if(!inputNumero || !inputCat || !inputTitre || !selectLieu || !selectSaison || !inputLien) return;
 
-            const nouveauTitre = inputTitre.value.trim();
+            const nouveauNumero = inputNumero.value.trim();
             const nouvelleCategorie = inputCat.value.trim();
+            const cleanTitreText = inputTitre.value.trim();
+            const nouveauLieu = selectLieu.value;
+            const nouvelleSaison = selectSaison.value;
+            const nouveauLien = inputLien.value.trim();
 
-            if(!nouveauTitre || !nouvelleCategorie) {
-                alert("⚠️ Le titre et la catégorie ne peuvent pas être vides.");
+            if(!nouveauNumero || !nouvelleCategorie || !cleanTitreText) {
+                alert("⚠️ Le numéro, la catégorie et l'objet de l'arrêté ne peuvent pas être vides.");
                 return;
             }
+
+            // Reconstruction automatique de la chaîne de titre avec l'arborescence des tags requis
+            let finalTitre = "";
+            if (nouveauLieu) finalTitre += `[${nouveauLieu}] `;
+            if (nouvelleSaison) finalTitre += `[${nouvelleSaison}] `;
+            finalTitre += cleanTitreText;
+            finalTitre = finalTitre.trim();
 
             try {
                 const { error } = await _supabase
                     .from('arretes')
                     .update({ 
-                        titre: nouveauTitre, 
-                        categorie: nouvelleCategorie 
+                        numero: nouveauNumero,
+                        categorie: nouvelleCategorie,
+                        titre: finalTitre,
+                        lien: nouveauLien
                     })
-                    .eq('numero', numeroActe);
+                    .eq('numero', originalNumero);
 
                 if (error) throw error;
                 
-                alert(`✅ L'acte N° ${numeroActe} a été mis à jour avec succès dans le cloud Supabase !`);
-                chargerDonnees(); // Synchronise et actualise l'affichage
+                alert(`✅ L'acte a été mis à jour avec succès dans le cloud Supabase !`);
+                chargerDonnees(); // Synchronise la base de données locale avec le serveur
             } catch (err) {
                 alert("❌ Erreur lors de la mise à jour : " + err.message);
             }
