@@ -8,10 +8,26 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
         .container { max-width: 1350px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header h1 { margin: 0 0 5px 0; font-size: 24px; }
-        .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         
+        /* Header avec alignement pour le bouton Admin */
+        .header-container { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header-text h1 { margin: 0 0 5px 0; font-size: 24px; }
+        .header-text p { margin: 0; font-size: 14px; opacity: 0.9; }
+        
+        .btn-admin-toggle { background-color: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.4); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .btn-admin-toggle:hover { background-color: white; color: #1f4e78; }
+
+        /* Panneau d'options Admin */
+        .admin-panel { display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; animation: fadeIn 0.3s ease; }
+        .admin-panel h3 { margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .admin-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-admin-action { padding: 8px 12px; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-danger:hover { background-color: #bd2130; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-secondary:hover { background-color: #5a6268; }
+        
+        /* Barre d'outils */
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .search-container { flex: 1; min-width: 250px; }
         .search-container input { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
@@ -19,31 +35,61 @@
         .season-container { display: flex; align-items: center; gap: 10px; }
         .season-select { padding: 10px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background-color: white; cursor: pointer; color: #1f4e78; font-weight: 600; outline: none; }
 
+        /* Onglets */
         .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .tab-btn { padding: 10px 20px; border: none; background-color: #e0e6ed; color: #4a5568; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
         .tab-btn:hover { background-color: #cbd5e1; }
         .tab-btn.active { background-color: #1f4e78; color: white; }
 
+        /* Tableau */
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eef2f6; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eef2f6; vertical-align: middle; }
         th { background-color: #1f4e78; color: white; font-weight: 600; font-size: 14px; text-transform: uppercase; }
         tr:hover { background-color: #f8fafc; }
         
         .badge-num { background-color: #edf2f7; color: #2d3748; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
         .badge-cat { background-color: #ebf8ff; color: #2b6cb0; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         
-        .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; }
+        /* Boutons d'action */
+        .action-cell { display: flex; gap: 6px; }
+        .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: background 0.2s; }
         .btn-pdf:hover { background-color: #1f4e78; }
+        
+        /* Nouveau bouton Mail */
+        .btn-mail { display: inline-block; padding: 6px 12px; background-color: #e2e8f0; color: #4a5568; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .btn-mail:hover { background-color: #cbd5e1; color: #1a202c; }
+        
+        /* Colonnes admin masquées par défaut */
+        .admin-col { display: none; }
+        
         .note-box { width: 100%; min-height: 40px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; resize: vertical; box-sizing: border-box; }
         .loading { text-align: center; padding: 40px; font-size: 16px; color: #718096; font-style: italic; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="header">
-            <h1>Mairie de Morzine-Avoriaz</h1>
-            <p>Registre Intranet des Arrêtés Municipaux — Indexation & Archivage Dynamique</p>
+        <div class="header-container">
+            <div class="header-text">
+                <h1>Mairie de Morzine-Avoriaz</h1>
+                <p>Registre Intranet des Arrêtés Municipaux — Indexation & Archivage Dynamique</p>
+            </div>
+            <button class="btn-admin-toggle" onclick="toggleAdminPanel()">⚙️ Options Admin</button>
+        </div>
+
+        <div class="admin-panel" id="adminPanel">
+            <h3>🛠️ Zone d'Administration du Secrétariat</h3>
+            <p style="margin: 0 0 10px 0; font-size: 13px;">Options de maintenance rapide des actes et des métadonnées locales :</p>
+            <div class="admin-actions">
+                <button class="btn-admin-action btn-secondary" onclick="toggleAdminColumns()">👁️ Afficher/Masquer Colonne de Suppression</button>
+                <button class="btn-admin-action btn-danger" onclick="viderToutesLesNotes()">🗑️ Effacer toutes les notes de bureau (Local)</button>
+                <button class="btn-admin-action btn-secondary" onclick="chargerDonnees()">🔄 Forcer la synchronisation Supabase</button>
+            </div>
         </div>
 
         <div class="toolbar">
@@ -79,25 +125,28 @@
                     <th style="width: 150px;">Catégorie</th>
                     <th>Nom & Objet de l'arrêté</th>
                     <th style="width: 280px;">Notes de bureau</th>
-                    <th style="width: 100px;">Action</th>
+                    <th style="width: 180px;">Actions</th>
+                    <th class="admin-col" style="width: 100px; background-color: #e53e3e;">Modération</th>
                 </tr>
             </thead>
             <tbody id="listeArretes">
                 <tr>
-                    <td colspan="5" class="loading">Connexion sécurisée au cloud Supabase...</td>
+                    <td colspan="6" class="loading">Connexion sécurisée au cloud Supabase...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <script>
+        // Intégration de vos accès récents et fonctionnels 
         const SUPABASE_URL = "https://vpyqplxubdzezwnpcwxy.supabase.co/";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+
         let tousLesArretes = [];
         let dossierActuel = 'Tout';
         let saisonActuelle = 'Toutes';
+        let colonnesAdminVisibles = false;
 
         async function chargerDonnees() {
             try {
@@ -111,7 +160,7 @@
                 verifierEtAjouterOngletsDynamiques();
                 afficherTableau();
             } catch (err) {
-                document.getElementById('listeArretes').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">❌ Erreur : ${err.message}</td></tr>`;
+                document.getElementById('listeArretes').innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">❌ Erreur : ${err.message}</td></tr>`;
             }
         }
 
@@ -138,7 +187,7 @@
             tbody.innerHTML = '';
 
             if (tousLesArretes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucun arrêté trouvé.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">Aucun arrêté trouvé.</td></tr>';
                 return;
             }
 
@@ -160,20 +209,32 @@
                     if (item.categorie === "Circulation") ico = "🚗";
                     if (item.categorie === "Événements") ico = "🎉";
 
+                    // Préparation des variables propres pour l'email
+                    const sujetEmail = encodeURIComponent(`Arrêté Municipal N° ${item.numero} - Mairie de Morzine-Avoriaz`);
+                    const corpsEmail = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint les informations concernant l'arrêté municipal référencé sur l'intranet :\n\n📌 Acte N° : ${item.numero}\n📄 Objet : ${item.titre}\n🔗 Lien de téléchargement direct du document PDF : ${item.lien}\n\nCordialement,\nLe Secrétariat Général`);
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><span class="badge-num">${item.numero}</span></td>
                         <td><span class="badge-cat">${ico} ${item.categorie}</span></td>
                         <td><strong>${item.titre}</strong></td>
                         <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
-                        <td><a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a></td>
+                        <td>
+                            <div class="action-cell">
+                                <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
+                                <a href="mailto:?subject=${sujetEmail}&body=${corpsEmail}" class="btn-mail">📧 Mail</a>
+                            </div>
+                        </td>
+                        <td class="admin-col" style="${colonnesAdminVisibles ? 'display: table-cell;' : 'display: none;'}">
+                            <button class="btn-admin-action btn-danger" style="padding: 4px 8px;" onclick="supprimerEntreeBDD('${item.numero}')">Supprimer</button>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 }
             });
 
             if (compteur === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucun arrêté trouvé.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">Aucun arrêté ne correspond à vos critères.</td></tr>';
             }
 
             document.querySelectorAll('.note-box').forEach(textarea => {
@@ -183,6 +244,43 @@
                     localStorage.setItem('note_mairie_' + id, e.target.value);
                 });
             });
+        }
+
+        // =====================================================================
+        // BACKOFFICE ADMIN CONTROLS
+        // =====================================================================
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function toggleAdminColumns() {
+            colonnesAdminVisibles = !colonnesAdminVisibles;
+            document.querySelectorAll('.admin-col').forEach(el => {
+                el.style.display = colonnesAdminVisibles ? 'table-cell' : 'none';
+            });
+        }
+
+        function viderToutesLesNotes() {
+            if (confirm("⚠️ Voulez-vous vraiment effacer TOUTES vos annotations secrétariat enregistrées sur ce navigateur ?")) {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('note_mairie_')) localStorage.removeItem(key);
+                });
+                afficherTableau();
+            }
+        }
+
+        async function supprimerEntreeBDD(numeroActe) {
+            if (confirm(`🛑 Voulez-vous supprimer définitivement l'indexation de l'acte N° ${numeroActe} sur Supabase ? (Le fichier physique restera sur votre serveur)`)) {
+                try {
+                    const { error } = await _supabase.from('arretes').delete().eq('numero', numeroActe);
+                    if (error) throw error;
+                    alert(`L'acte ${numeroActe} a été retiré de la base cloud.`);
+                    chargerDonnees();
+                } catch (err) {
+                    alert("Erreur de suppression : " + err.message);
+                }
+            }
         }
 
         function filtrerDossier(nomDossier, event) {
