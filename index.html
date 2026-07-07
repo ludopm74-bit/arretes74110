@@ -26,8 +26,6 @@
         .btn-danger:hover { background-color: #bd2130; }
         .btn-secondary { background-color: #6c757d; color: white; }
         .btn-secondary:hover { background-color: #5a6268; }
-        .btn-success { background-color: #28a745; color: white; }
-        .btn-success:hover { background-color: #218838; }
         
         /* Barre d'outils */
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -58,6 +56,9 @@
 
         .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; }
         .btn-pdf:hover { background-color: #1f4e78; }
+        .btn-mail { display: inline-block; padding: 6px 12px; background-color: #4a5568; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; }
+        .btn-mail:hover { background-color: #2d3748; }
+        
         .note-box { width: 100%; min-height: 40px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; resize: vertical; box-sizing: border-box; }
         .loading { text-align: center; padding: 40px; font-size: 16px; color: #718096; font-style: italic; }
 
@@ -73,6 +74,7 @@
 <body>
 
     <div class="container">
+        <!-- HEADER AVEC BOUTON OPTIONS ADMIN -->
         <div class="header">
             <div>
                 <h1>Mairie de Morzine-Avoriaz</h1>
@@ -81,6 +83,7 @@
             <button class="btn-admin-toggle" onclick="toggleAdminPanel()">⚙️ Options Admin</button>
         </div>
 
+        <!-- PANNEAU DE CONTROLE ADMIN -->
         <div class="admin-panel" id="adminPanel">
             <h3>🛠️ Zone d'Administration du Secrétariat</h3>
             <p style="margin: 0 0 10px 0; font-size: 13px;">Options de maintenance rapide des actes et des métadonnées globales :</p>
@@ -91,6 +94,7 @@
             </div>
         </div>
 
+        <!-- BARRE DE RECHERCHE ET SELECTEUR DE SAISON -->
         <div class="toolbar">
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="🔍 Rechercher par numéro, mot-clé, lieu ([Morzine] / [Avoriaz])...">
@@ -108,6 +112,7 @@
             </div>
         </div>
 
+        <!-- ONGLETS -->
         <div class="tabs" id="categoriesTabs">
             <button class="tab-btn active" onclick="filtrerDossier('Tout', event)">🗂️ Tout afficher</button>
             <button class="tab-btn" onclick="filtrerDossier('Permanent', event)">📜 Permanent</button>
@@ -117,15 +122,16 @@
             <button class="tab-btn" onclick="filtrerDossier('Autres', event)">📁 Autres</button>
         </div>
 
+        <!-- TABLEAU -->
         <table id="tableArretes">
             <thead>
                 <tr>
-                    <th style="width: 130px;">Numéro d'Acte</th>
+                    <th style="width: 140px;">Numéro d'Acte</th>
                     <th style="width: 160px;">Catégorie</th>
                     <th>Nom & Objet de l'arrêté (et Métadonnées)</th>
                     <th style="width: 260px;">Notes de bureau</th>
-                    <th style="width: 100px;">Action</th>
-                    <th class="admin-col" style="width: 130px; background-color: #2f5597; color: white;">Gestion BDD</th>
+                    <th style="width: 175px;">Actions</th>
+                    <th class="admin-col" style="width: 110px; background-color: #dc3545; color: white;">Sécurité BDD</th>
                 </tr>
             </thead>
             <tbody id="listeArretes">
@@ -171,7 +177,6 @@
             const categoriesParDefaut = ['Tout', 'Permanent', 'Travaux', 'Circulation', 'Événements', 'Autres'];
             const container = document.getElementById('categoriesTabs');
             
-            // Nettoyage des anciens onglets dynamiques pour éviter les doublons au rechargement
             const boutons = container.querySelectorAll('.tab-btn');
             boutons.forEach(b => {
                 if(!categoriesParDefaut.includes(b.innerText.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]|📁|📜|👷|🚗|🎉|🗂️/g, '').trim())) {
@@ -197,7 +202,6 @@
             const saisie = document.getElementById('searchInput').value.toLowerCase().trim();
             tbody.innerHTML = '';
 
-            // Gestion de la visibilité de la colonne administrative d'entête
             document.querySelectorAll('th.admin-col').forEach(el => {
                 el.style.display = colonnesAdminVisibles ? 'table-cell' : 'none';
             });
@@ -225,7 +229,6 @@
                     if (item.categorie === "Circulation") ico = "🚗";
                     if (item.categorie === "Événements") ico = "🎉";
 
-                    // --- ISOLEMENT DES TAGS DANS LE TITRE POUR L'EDITION ---
                     let cleanTitre = item.titre || '';
                     let currentLieu = '';
                     if (cleanTitre.includes('[Morzine]')) {
@@ -244,7 +247,6 @@
                         }
                     });
 
-                    // --- GENERATION DU RENDU (CLASSIQUE vs EDITION) ---
                     const renduNumero = colonnesAdminVisibles
                         ? `<input type="text" id="edit-numero-${item.numero}" class="edit-input" style="font-family: monospace; font-weight: bold;" value="${item.numero}">`
                         : `<span class="badge-num">${item.numero}</span>`;
@@ -289,18 +291,24 @@
                         `;
                     }
 
+                    // Encodage propre du sujet et du corps du mail de partage
+                    const mailSubject = encodeURIComponent(`Arrêté Municipal N° ${item.numero} - Morzine`);
+                    const mailBody = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint l'arrêté municipal référencé au secrétariat :\n\n📌 Acte N° : ${item.numero}\n📁 Catégorie : ${item.categorie}\n📝 Objet : ${item.titre}\n\n🔗 Lien vers le document officiel (PDF) : ${item.lien}\n\nCordialement,\nServices Administratifs - Mairie de Morzine-Avoriaz`);
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${renduNumero}</td>
                         <td>${renduCategorie}</td>
                         <td>${renduTitre}</td>
                         <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
-                        <td><a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a></td>
-                        <td class="admin-col" style="${colonnesAdminVisibles ? 'display: table-cell;' : 'display: none;'}">
-                            <div style="display: flex; flex-direction: column; gap: 6px;">
-                                <button class="btn-admin-action btn-success" style="padding: 5px 8px;" onclick="sauvegarderModification('${item.numero}')">💾 Sauver</button>
-                                <button class="btn-admin-action btn-danger" style="padding: 5px 8px;" onclick="supprimerEntreeBDD('${item.numero}')">🗑️ Suppr</button>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
+                                <a href="mailto:?subject=${mailSubject}&body=${mailBody}" class="btn-mail" title="Partager par mail">✉️ Mail</a>
                             </div>
+                        </td>
+                        <td class="admin-col" style="${colonnesAdminVisibles ? 'display: table-cell;' : 'display: none;'}">
+                            <button class="btn-admin-action btn-danger" style="padding: 6px 10px; width:100%;" onclick="supprimerEntreeBDD('${item.numero}')">🗑️ Suppr</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -320,9 +328,6 @@
             });
         }
 
-        // =====================================================================
-        // CONTROLES ADMIN & LIVE EDITING FONCTIONNEL
-        // =====================================================================
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
             if (panel.style.display === 'block') {
@@ -342,67 +347,90 @@
             }
         }
 
-        function toggleAdminColumns() {
-            colonnesAdminVisibles = !colonnesAdminVisibles;
+        async function toggleAdminColumns() {
             const btn = document.getElementById('btnToggleEdition');
-            if(colonnesAdminVisibles) {
-                btn.innerText = "👁️ Désactiver le Mode Édition (Sécuriser)";
-                btn.style.backgroundColor = "#e2e8f0";
-                btn.style.color = "#1a202c";
-            } else {
+            
+            if (colonnesAdminVisibles) {
+                btn.innerText = "⏳ Sauvegarde automatique en cours...";
+                btn.style.backgroundColor = "#ffc107";
+                btn.style.color = "#000";
+                btn.disabled = true;
+
+                await sauvegarderToutAutomatique();
+                btn.disabled = false;
+
+                colonnesAdminVisibles = false;
                 btn.innerText = "✏️ Activer le Mode Édition / Modification globale";
                 btn.style.backgroundColor = "#6c757d";
                 btn.style.color = "white";
+                
+                await chargerDonnees();
+            } else {
+                colonnesAdminVisibles = true;
+                btn.innerText = "👁️ Désactiver le Mode Édition (Sauvegarde automatique)";
+                btn.style.backgroundColor = "#e2e8f0";
+                btn.style.color = "#1a202c";
+                afficherTableau();
             }
-            afficherTableau(); // Force le rafraîchissement complet pour dessiner les formulaires
         }
 
-        async function sauvegarderModification(originalNumero) {
-            const inputNumero = document.getElementById(`edit-numero-${originalNumero}`);
-            const inputCat = document.getElementById(`edit-cat-${originalNumero}`);
-            const inputTitre = document.getElementById(`edit-titre-${originalNumero}`);
-            const selectLieu = document.getElementById(`edit-lieu-${originalNumero}`);
-            const selectSaison = document.getElementById(`edit-saison-${originalNumero}`);
-            const inputLien = document.getElementById(`edit-lien-${originalNumero}`);
-            
-            if(!inputNumero || !inputCat || !inputTitre || !selectLieu || !selectSaison || !inputLien) return;
+        async function sauvegarderToutAutomatique() {
+            const promessesMisesAJour = [];
 
-            const nouveauNumero = inputNumero.value.trim();
-            const nouvelleCategorie = inputCat.value.trim();
-            const cleanTitreText = inputTitre.value.trim();
-            const nouveauLieu = selectLieu.value;
-            const nouvelleSaison = selectSaison.value;
-            const nouveauLien = inputLien.value.trim();
+            for (const item of tousLesArretes) {
+                const inputNumero = document.getElementById(`edit-numero-${item.numero}`);
+                const inputCat = document.getElementById(`edit-cat-${item.numero}`);
+                const inputTitre = document.getElementById(`edit-titre-${item.numero}`);
+                const selectLieu = document.getElementById(`edit-lieu-${item.numero}`);
+                const selectSaison = document.getElementById(`edit-saison-${item.numero}`);
+                const inputLien = document.getElementById(`edit-lien-${item.numero}`);
 
-            if(!nouveauNumero || !nouvelleCategorie || !cleanTitreText) {
-                alert("⚠️ Le numéro, la catégorie et l'objet de l'arrêté ne peuvent pas être vides.");
-                return;
+                if (!inputTitre) continue;
+
+                const nouveauNumero = inputNumero.value.trim();
+                const nouvelleCategorie = inputCat.value.trim();
+                const cleanTitreText = inputTitre.value.trim();
+                const nouveauLieu = selectLieu.value;
+                const nouvelleSaison = selectSaison.value;
+                const nouveauLien = inputLien.value.trim();
+
+                if (!nouveauNumero || !nouvelleCategorie || !cleanTitreText) continue;
+
+                let finalTitre = "";
+                if (nouveauLieu) finalTitre += `[${nouveauLieu}] `;
+                if (nouvelleSaison) finalTitre += `[${nouvelleSaison}] `;
+                finalTitre += cleanTitreText;
+                finalTitre = finalTitre.trim();
+
+                if (nouveauNumero !== item.numero || 
+                    nouvelleCategorie !== item.categorie || 
+                    finalTitre !== item.titre || 
+                    nouveauLien !== item.lien) {
+                    
+                    const requete = _supabase
+                        .from('arretes')
+                        .update({ 
+                            numero: nouveauNumero,
+                            categorie: nouvelleCategorie,
+                            titre: finalTitre,
+                            lien: nouveauLien
+                        })
+                        .eq('numero', item.numero);
+                    
+                    promessesMisesAJour.push(requete);
+                }
             }
 
-            // Reconstruction automatique de la chaîne de titre avec l'arborescence des tags requis
-            let finalTitre = "";
-            if (nouveauLieu) finalTitre += `[${nouveauLieu}] `;
-            if (nouvelleSaison) finalTitre += `[${nouvelleSaison}] `;
-            finalTitre += cleanTitreText;
-            finalTitre = finalTitre.trim();
-
-            try {
-                const { error } = await _supabase
-                    .from('arretes')
-                    .update({ 
-                        numero: nouveauNumero,
-                        categorie: nouvelleCategorie,
-                        titre: finalTitre,
-                        lien: nouveauLien
-                    })
-                    .eq('numero', originalNumero);
-
-                if (error) throw error;
-                
-                alert(`✅ L'acte a été mis à jour avec succès dans le cloud Supabase !`);
-                chargerDonnees(); // Synchronise la base de données locale avec le serveur
-            } catch (err) {
-                alert("❌ Erreur lors de la mise à jour : " + err.message);
+            if (promessesMisesAJour.length > 0) {
+                try {
+                    const resultats = await Promise.all(promessesMisesAJour);
+                    const erreurTrouvee = resultats.find(r => r.error);
+                    if (erreurTrouvee) throw erreurTrouvee.error;
+                    
+                    alert(`💾 Sauvegarde automatique réussie ! ${promessesMisesAJour.length} arrêté(s) synchronisé(s) dans le cloud.`);
+                } catch (err) {
+                    alert("❌ Une erreur est survenue lors de la sauvegarde automatique : " + err.message);
+                }
             }
         }
 
