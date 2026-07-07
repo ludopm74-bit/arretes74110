@@ -2,113 +2,92 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-<link rel="icon" href="data:,">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mairie de Morzine - Registre des Arrêtés</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 1550px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
-        .header h1 { margin: 0 0 5px 0; font-size: 24px; display: inline-block; }
+        .container { max-width: 1350px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1f4e78, #2f5597); color: white; padding: 25px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header h1 { margin: 0 0 5px 0; font-size: 24px; }
         .header p { margin: 0; font-size: 14px; opacity: 0.9; }
         
-        .admin-header-btn { position: absolute; top: 25px; right: 25px; padding: 10px 16px; background-color: #e2e8f0; color: #1e293b; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.2s; }
-        .admin-header-btn.active { background-color: #ef4444; color: white; }
-        .edit-title-btn { background: none; border: none; color: #bae6fd; cursor: pointer; font-size: 14px; margin-left: 10px; text-decoration: underline; }
-
-        /* Panel configuration mail */
-        .admin-panel { background: #f8fafc; border: 2px dashed #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: none; }
-        .admin-panel label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; color: #1e293b; }
-        .admin-panel input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-
-        .toolbar { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; }
-        .toolbar-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .search-container { flex: 1; min-width: 250px; }
+        .search-container input { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
         
-        .search-container { flex: 1; min-width: 300px; }
-        .search-bar { width: 100%; padding: 12px 15px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-        
-        .folder-tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .tab-btn-wrapper { display: inline-flex; align-items: center; background: white; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
-        .tab-btn { padding: 8px 14px; background: none; border: none; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; color: #333; }
-        .tab-btn-wrapper.active { background-color: #1f4e78; border-color: #1f4e78; }
-        .tab-btn-wrapper.active .tab-btn { color: white; }
-        .del-folder-btn { background: #fee2e2; color: #ef4444; border: none; padding: 8px 10px; cursor: pointer; font-weight: bold; border-left: 1px solid #fca5a5; font-size: 12px; }
-        .del-folder-btn:hover { background: #fca5a5; }
-        .btn-add-folder { padding: 8px 14px; background-color: #10b981; color: white; border: 1px solid #10b981; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-        
-        .lieux-filters { display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 6px; border: 1px solid #cbd5e1; }
-        .lieu-btn { padding: 6px 12px; border: none; background: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; color: #475569; }
-        .lieu-btn.active { background: white; color: #1f4e78; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .season-container { display: flex; align-items: center; gap: 10px; }
+        .season-select { padding: 10px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background-color: white; cursor: pointer; color: #1f4e78; font-weight: 600; outline: none; }
 
-        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #d9d9d9; }
-        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
-        th { background-color: #f1f4f8; color: #1f4e78; padding: 14px; font-weight: 600; border-bottom: 2px solid #cbd5e1; font-size: 13px; text-transform: uppercase; }
-        td { padding: 14px; border-bottom: 1px solid #e2e8f0; color: #444; font-size: 14px; vertical-align: middle; word-wrap: break-word; }
+        .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border: none; background-color: #e0e6ed; color: #4a5568; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .tab-btn:hover { background-color: #cbd5e1; }
+        .tab-btn.active { background-color: #1f4e78; color: white; }
+
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eef2f6; }
+        th { background-color: #1f4e78; color: white; font-weight: 600; font-size: 14px; text-transform: uppercase; }
         tr:hover { background-color: #f8fafc; }
         
-        .badge-num { background-color: #e0f2fe; color: #0369a1; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 13px; border: 1px solid #bae6fd; display: inline-block; }
-        .badge-cat { background-color: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; display: inline-block; }
-        .badge-lieu { background-color: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #fde68a; display: inline-block; }
+        .badge-num { background-color: #edf2f7; color: #2d3748; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+        .badge-cat { background-color: #ebf8ff; color: #2b6cb0; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         
-        .admin-input { width: 100%; padding: 6px 8px; border: 1px solid #3b82f6; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
-        .admin-select { width: 100%; padding: 6px 8px; border: 1px solid #3b82f6; border-radius: 4px; background: white; font-size: 13px; }
-        .btn-save-row { background-color: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        
-        .note-box { width: 100%; height: 50px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 12px; resize: vertical; box-sizing: border-box; outline: none; }
-        .btn-group-actions { display: flex; flex-direction: column; gap: 4px; }
-        .btn-pdf { display: block; padding: 6px 10px; background-color: #10b981; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; }
-        .btn-email { display: block; padding: 6px 10px; background-color: #f59e0b; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; cursor: pointer; }
-        .loading { padding: 20px; text-align: center; font-weight: bold; color: #1f4e78; }
+        .btn-pdf { display: inline-block; padding: 6px 12px; background-color: #2f5597; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: 600; }
+        .btn-pdf:hover { background-color: #1f4e78; }
+        .note-box { width: 100%; min-height: 40px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; resize: vertical; box-sizing: border-box; }
+        .loading { text-align: center; padding: 40px; font-size: 16px; color: #718096; font-style: italic; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div class="header">
-            <h1 id="siteTitle">📁 Registre National des Arrêtés Municipaux</h1>
-            <button id="editTitleBtn" class="edit-title-btn" style="display:none;" onclick="modifierTitreSite()">✏️ Nom de Mairie</button>
-            <p>Commune de Morzine Avoriaz — Synchronisation Cloud Supabase & GitHub</p>
-            <button id="adminToggleBtn" class="admin-header-btn" onclick="toggleAdminMode()">🔧 Connexion Admin</button>
-        </div>
-
-        <!-- Panneau configuration Liste de diffusion -->
-        <div class="admin-panel" id="adminPanel">
-            <label>📧 Liste de diffusion e-mail (séparez les adresses par des virgules) :</label>
-            <input type="text" id="mailingListInput" placeholder="exemple@morzine.fr, secretariat@morzine.fr, elus@morzine.fr" oninput="sauvegarderMailingList()">
+            <h1>Mairie de Morzine-Avoriaz</h1>
+            <p>Registre Intranet des Arrêtés Municipaux — Indexation & Archivage Dynamique</p>
         </div>
 
         <div class="toolbar">
-            <div class="toolbar-row">
-                <div class="search-container">
-                    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Rechercher en temps réel (numéro, rue, mot-clé)...">
-                </div>
-                <div class="lieux-filters">
-                    <button class="lieu-btn active" onclick="filtrerLieu('Tous', event)">📍 Tous</button>
-                    <button class="lieu-btn" onclick="filtrerLieu('Morzine', event)">Morzine</button>
-                    <button class="lieu-btn" onclick="filtrerLieu('Avoriaz', event)">Avoriaz</button>
-                </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="🔍 Rechercher par numéro, mot-clé, lieu ([Morzine] / [Avoriaz])...">
             </div>
-            <div class="toolbar-row">
-                <div class="folder-tabs" id="folderTabsContainer"></div>
+            
+            <div class="season-container">
+                <label for="seasonSelect" style="font-size: 14px; font-weight: bold; color: #4a5568;">Temporalité :</label>
+                <select id="seasonSelect" class="season-select">
+                    <option value="Toutes">📅 Toutes les options</option>
+                    <option value="Permanent">♾️ Permanent (Toute l'année)</option>
+                    <option value="Été">☀️ Été (15 Juin - 15 Sept)</option>
+                    <option value="Hiver">❄️ Hiver (15 Déc - 20 Avril)</option>
+                    <option value="Hors saison">🍂 Hors saison</option>
+                </select>
             </div>
         </div>
 
-        <div class="table-container">
-            <div id="loadingMessage" class="loading">🔄 Chargement des arrêtés depuis la base sécurisée...</div>
-            <table id="mainTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">N° Acte</th>
-                        <th style="width: 10%;">Lieu</th>
-                        <th style="width: 12%;">Dossier</th>
-                        <th style="width: 38%;">Sujet / Objet de l'arrêté</th>
-                        <th style="width: 15%;">Mes Annotations</th>
-                        <th style="width: 15%;">Action / Partage</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+        <div class="tabs" id="categoriesTabs">
+            <button class="tab-btn active" onclick="filtrerDossier('Tout', event)">🗂️ Tout afficher</button>
+            <button class="tab-btn" onclick="filtrerDossier('Permanent', event)">📜 Permanent</button>
+            <button class="tab-btn" onclick="filtrerDossier('Travaux', event)">👷 Travaux</button>
+            <button class="tab-btn" onclick="filtrerDossier('Circulation', event)">🚗 Circulation</button>
+            <button class="tab-btn" onclick="filtrerDossier('Événements', event)">🎉 Événements</button>
+            <button class="tab-btn" onclick="filtrerDossier('Autres', event)">📁 Autres</button>
         </div>
+
+        <table id="tableArretes">
+            <thead>
+                <tr>
+                    <th style="width: 120px;">Numéro d'Acte</th>
+                    <th style="width: 150px;">Catégorie</th>
+                    <th>Nom & Objet de l'arrêté</th>
+                    <th style="width: 280px;">Notes de bureau</th>
+                    <th style="width: 100px;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="listeArretes">
+                <tr>
+                    <td colspan="5" class="loading">Connexion sécurisée au cloud Supabase...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -116,202 +95,108 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweXFwbHh1YmR6ZXp3bnBjd3h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODU0MDksImV4cCI6MjA5ODY2MTQwOX0.XYRu67XHoKuOqpS24Ugou2i0ZvzJjJ0LYphQdWgt6Cc";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        let dossierActuel = 'Tous';
-        let lieuActuel = 'Tous';
         let tousLesArretes = [];
-        let isAdmin = false;
-
-        let categoriesBase = ['Circulation', 'Travaux', 'Événements', 'Autres'];
-        let customCategories = JSON.parse(localStorage.getItem('mairie_custom_folders') || "[]");
-        let listeDossiers = [...new Set([...categoriesBase, ...customCategories])];
-
-        document.getElementById('siteTitle').innerText = localStorage.getItem('mairie_site_title') || "📁 Registre National des Arrêtés Municipaux";
-        document.getElementById('mailingListInput').value = localStorage.getItem('mairie_mailing_list') || "";
+        let dossierActuel = 'Tout';
+        let saisonActuelle = 'Toutes';
 
         async function chargerDonnees() {
-            const { data, error } = await _supabase.from('arretes').select('*').order('numero', { ascending: false });
-            if (error) {
-                document.getElementById('loadingMessage').innerText = "❌ Erreur de liaison : " + error.message;
-                return;
+            try {
+                const { data, error } = await _supabase
+                    .from('arretes')
+                    .select('*')
+                    .order('numero', { ascending: false });
+
+                if (error) throw error;
+                tousLesArretes = data || [];
+                verifierEtAjouterOngletsDynamiques();
+                afficherTableau();
+            } catch (err) {
+                document.getElementById('listeArretes').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">❌ Erreur : ${err.message}</td></tr>`;
             }
-            tousLesArretes = data;
-            document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('mainTable').style.display = 'table';
-            
-            tousLesArretes.forEach(item => {
-                if (item.categorie && !listeDossiers.includes(item.categorie)) {
-                    listeDossiers.push(item.categorie);
-                }
-            });
-            genererOngletsDossiers();
-            afficherTableau();
         }
 
-        function genererOngletsDossiers() {
-            const container = document.getElementById('folderTabsContainer');
-            const icones = {"Travaux": "🚧", "Circulation": "🚗", "Événements": "🎉", "Autres": "📄"};
+        function verifierEtAjouterOngletsDynamiques() {
+            const categoriesParDefaut = ['Tout', 'Permanent', 'Travaux', 'Circulation', 'Événements', 'Autres'];
+            const container = document.getElementById('categoriesTabs');
+            const categoriesExistantes = [...new Set(tousLesArretes.map(item => item.categorie))];
             
-            container.innerHTML = `
-                <div class="tab-btn-wrapper ${dossierActuel === 'Tous' ? 'active' : ''}">
-                    <button class="tab-btn" onclick="filtrerDossier('Tous', event)">📁 Tous</button>
-                </div>`;
-            
-            listeDossiers.forEach(dossier => {
-                const ico = icones[dossier] || "📁";
-                const estPersonnalise = customCategories.includes(dossier);
-                
-                let boutonSupprimer = (isAdmin && estPersonnalise) 
-                    ? `<button class="del-folder-btn" onclick="supprimerDossier('${dossier}', event)">✕</button>` 
-                    : '';
-
-                container.innerHTML += `
-                    <div class="tab-btn-wrapper ${dossierActuel === dossier ? 'active' : ''}">
-                        <button class="tab-btn" onclick="filtrerDossier('${dossier}', event)">${ico} ${dossier}</button>
-                        ${boutonSupprimer}
-                    </div>`;
+            categoriesExistantes.forEach(cat => {
+                if (cat && !categoriesParDefaut.includes(cat)) {
+                    const btn = document.createElement('button');
+                    btn.className = "tab-btn";
+                    btn.innerText = `📁 ${cat}`;
+                    btn.onclick = (e) => filtrerDossier(cat, e);
+                    container.appendChild(btn);
+                    categoriesParDefaut.push(cat);
+                }
             });
-
-            if (isAdmin) {
-                container.innerHTML += `<button class="btn-add-folder" onclick="ajouterNouveauDossier()">➕ Créer un dossier</button>`;
-            }
         }
 
         function afficherTableau() {
-            const tbody = document.getElementById('tableBody');
-            const searchTxt = document.getElementById('searchInput').value.toLowerCase();
-            const icones = {"Travaux": "🚧", "Circulation": "🚗", "Événements": "🎉", "Autres": "📄"};
-            
-            tbody.innerHTML = "";
+            const tbody = document.getElementById('listeArretes');
+            const saisie = document.getElementById('searchInput').value.toLowerCase().trim();
+            tbody.innerHTML = '';
+
+            if (tousLesArretes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucun arrêté trouvé.</td></tr>';
+                return;
+            }
+
+            let compteur = 0;
 
             tousLesArretes.forEach(item => {
-                const lieuItem = item.lieu || "Morzine";
-                const correspondDossier = (dossierActuel === 'Tous' || item.categorie === dossierActuel);
-                const correspondLieu = (lieuActuel === 'Tous' || lieuItem === lieuActuel);
-                const correspondRecherche = item.titre.toLowerCase().includes(searchTxt) || item.numero.toLowerCase().includes(searchTxt);
+                const texteTitre = item.titre ? item.titre.toLowerCase() : '';
+                const texteNumero = item.numero ? item.numero.toLowerCase() : '';
+                
+                const matchSearch = texteTitre.includes(saisie) || texteNumero.includes(saisie);
+                const matchCategory = (dossierActuel === 'Tout') || (item.categorie === dossierActuel);
+                const matchSaison = (saisonActuelle === 'Toutes') || (item.titre && item.titre.includes(`[${saisonActuelle}]`));
 
-                if (correspondDossier && correspondLieu && correspondRecherche) {
-                    const ico = icones[item.categorie] || "📁";
+                if (matchSearch && matchCategory && matchSaison) {
+                    compteur++;
+                    let ico = "📁";
+                    if (item.categorie === "Permanent") ico = "📜";
+                    if (item.categorie === "Travaux") ico = "👷";
+                    if (item.categorie === "Circulation") ico = "🚗";
+                    if (item.categorie === "Événements") ico = "🎉";
+
                     const tr = document.createElement('tr');
-
-                    if (isAdmin) {
-                        let optionsDossier = listeDossiers.map(d => `<option value="${d}" ${item.categorie === d ? 'selected' : ''}>${d}</option>`).join('');
-                        tr.innerHTML = `
-                            <td><input type="text" class="admin-input" id="edit-num-${item.numero}" value="${item.numero}"></td>
-                            <td>
-                                <select class="admin-select" id="edit-lieu-${item.numero}">
-                                    <option value="Morzine" ${lieuItem === 'Morzine' ? 'selected' : ''}>Morzine</option>
-                                    <option value="Avoriaz" ${lieuItem === 'Avoriaz' ? 'selected' : ''}>Avoriaz</option>
-                                </select>
-                            </td>
-                            <td><select class="admin-select" id="edit-cat-${item.numero}">${optionsDossier}</select></td>
-                            <td><textarea class="admin-input" style="height:50px; resize:vertical;" id="edit-titre-${item.numero}">${item.titre}</textarea></td>
-                            <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
-                            <td>
-                                <div class="btn-group-actions">
-                                    <button class="btn-save-row" onclick="sauvegarderLigne('${item.numero}')">💾 Sauver</button>
-                                    <button class="btn-email" onclick="transmettreParMail('${item.numero}', \`${item.titre.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`, '${item.lien}')">📧 Transmettre</button>
-                                    <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
-                                </div>
-                            </td>`;
-                    } else {
-                        tr.innerHTML = `
-                            <td><span class="badge-num">${item.numero}</span></td>
-                            <td><span class="badge-lieu">📍 ${lieuItem}</span></td>
-                            <td><span class="badge-cat">${ico} ${item.categorie}</span></td>
-                            <td><strong>${item.titre}</strong></td>
-                            <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
-                            <td>
-                                <div class="btn-group-actions">
-                                    <button class="btn-email" onclick="transmettreParMail('${item.numero}', \`${item.titre.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`, '${item.lien}')">📧 Mail</button>
-                                    <a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a>
-                                </div>
-                            </td>`;
-                    }
+                    tr.innerHTML = `
+                        <td><span class="badge-num">${item.numero}</span></td>
+                        <td><span class="badge-cat">${ico} ${item.categorie}</span></td>
+                        <td><strong>${item.titre}</strong></td>
+                        <td><textarea class="note-box" data-id="${item.numero}"></textarea></td>
+                        <td><a href="${item.lien}" target="_blank" class="btn-pdf">📄 Ouvrir</a></td>
+                    `;
                     tbody.appendChild(tr);
                 }
             });
 
+            if (compteur === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucun arrêté trouvé.</td></tr>';
+            }
+
             document.querySelectorAll('.note-box').forEach(textarea => {
                 const id = textarea.getAttribute('data-id');
                 textarea.value = localStorage.getItem('note_mairie_' + id) || '';
-                textarea.addEventListener('input', (e) => { localStorage.setItem('note_mairie_' + id, e.target.value); });
+                textarea.addEventListener('input', (e) => {
+                    localStorage.setItem('note_mairie_' + id, e.target.value);
+                });
             });
         }
 
-        function toggleAdminMode() {
-            if (!isAdmin) {
-                if (prompt("Mot de passe :") === "admin") {
-                    isAdmin = true;
-                    document.getElementById('adminToggleBtn').innerText = "🔒 Quitter Admin";
-                    document.getElementById('adminToggleBtn').classList.add('active');
-                    document.getElementById('editTitleBtn').style.display = "inline-block";
-                    document.getElementById('adminPanel').style.display = "block";
-                }
-            } else {
-                isAdmin = false;
-                document.getElementById('adminToggleBtn').innerText = "🔧 Connexion Admin";
-                document.getElementById('adminToggleBtn').classList.remove('active');
-                document.getElementById('editTitleBtn').style.display = "none";
-                document.getElementById('adminPanel').style.display = "none";
-            }
-            genererOngletsDossiers();
+        function filtrerDossier(nomDossier, event) {
+            dossierActuel = nomDossier;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
             afficherTableau();
         }
 
-        function sauvegarderMailingList() {
-            localStorage.setItem('mairie_mailing_list', document.getElementById('mailingListInput').value);
-        }
-
-        function transmettreParMail(numero, titre, lien) {
-            const listeDiffusion = localStorage.getItem('mairie_mailing_list') || "";
-            const sujet = encodeURIComponent(`[Mairie Morzine-Avoriaz] Nouvel Arrêté Municipal N° ${numero}`);
-            const corps = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint le lien vers le nouvel arrêté municipal publié :\n\n🔹 N° d'acte : ${numero}\n🔹 Objet : ${titre}\n\n👉 Consulter le document officiel en ligne : ${lien}\n\nCordialement,\nServices Administratifs.`);
-            
-            window.location.href = `mailto:${listeDiffusion}?subject=${sujet}&body=${corps}`;
-        }
-
-        function ajouterNouveauDossier() {
-            const nom = prompt("Nom du dossier :");
-            if (nom && nom.trim() !== "") {
-                customCategories.push(nom.trim());
-                localStorage.setItem('mairie_custom_folders', JSON.stringify(customCategories));
-                listeDossiers.push(nom.trim());
-                genererOngletsDossiers();
-                afficherTableau();
-            }
-        }
-
-        function supprimerDossier(nomDossier, event) {
-            event.stopPropagation();
-            if (confirm(`Voulez-vous supprimer le dossier "${nomDossier}" de l'affichage ? (Les arrêtés ne seront pas supprimés)`)) {
-                customCategories = customCategories.filter(c => c !== nomDossier);
-                localStorage.setItem('mairie_custom_folders', JSON.stringify(customCategories));
-                listeDossiers = listeDossiers.filter(d => d !== nomDossier);
-                if (dossierActuel === nomDossier) dossierActuel = 'Tous';
-                genererOngletsDossiers();
-                afficherTableau();
-            }
-        }
-
-        async function sauvegarderLigne(ancienNumero) {
-            const nNum = document.getElementById(`edit-num-${ancienNumero}`).value.trim();
-            const nLieu = document.getElementById(`edit-lieu-${ancienNumero}`).value;
-            const nCat = document.getElementById(`edit-cat-${ancienNumero}`).value;
-            const nTit = document.getElementById(`edit-titre-${ancienNumero}`).value.trim();
-
-            const { error } = await _supabase.from('arretes').update({ numero: nNum, lieu: nLieu, categorie: nCat, titre: nTit }).eq('numero', ancienNumero);
-            if (error) alert("Erreur Cloud : " + error.message);
-            else { alert("✅ Enregistré !"); chargerDonnees(); }
-        }
-
-        function modifierTitreSite() {
-            const t = prompt("Nouveau titre :", document.getElementById('siteTitle').innerText);
-            if (t) { document.getElementById('siteTitle').innerText = t; localStorage.setItem('mairie_site_title', t); }
-        }
-
-        function filtrerDossier(n, e) { dossierActuel = n; document.querySelectorAll('.tab-btn-wrapper').forEach(b => b.classList.remove('active')); e.target.parentNode.classList.add('active'); afficherTableau(); }
-        function filtrerLieu(n, e) { lieuActuel = n; document.querySelectorAll('.lieu-btn').forEach(b => b.classList.remove('active')); e.target.classList.add('active'); afficherTableau(); }
         document.getElementById('searchInput').addEventListener('input', afficherTableau);
+        document.getElementById('seasonSelect').addEventListener('change', (e) => {
+            saisonActuelle = e.target.value;
+            afficherTableau();
+        });
         
         chargerDonnees();
     </script>
